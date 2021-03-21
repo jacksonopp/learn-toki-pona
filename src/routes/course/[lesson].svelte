@@ -1,49 +1,96 @@
 <script context="module" lang="ts">
-  export async function preload({params, query}): any {
+  export async function preload({ params }): Promise<any> {
     const res = await this.fetch(`course/${params.lesson}.json`);
     const data = await res.json();
-    return {lesson: data, params};
+    return { lesson: data, params };
   }
 </script>
 
-<script lang='ts'>
+<script lang="ts">
   import Mcq from '../../components/Mcq.svelte';
-  
+
   export let lesson: any;
-  export let params: any
+  export let params: any;
+
+  let hasQuizStarted = false;
 
   let guesses = {
     total: 0,
     correct: 0,
-    incorrect: 0
+    incorrect: 0,
   };
 
-  function printLesson(): void {
-    console.log({lesson, params});
-  }
-
   function getNextLesson(): number {
-    return parseInt(params.lesson) + 1
+    return parseInt(params.lesson) + 1;
   }
 
   function handleAnswer(event): void {
     console.log('bing');
-    const correct = event.detail.correct
+    const correct = event.detail.correct;
     if (correct) {
-      guesses.correct++
+      guesses.correct++;
     } else {
-      guesses.incorrect++
+      guesses.incorrect++;
     }
-    
+
     console.log(guesses);
   }
 
   function handleNext(): void {
-    guesses.total++
+    guesses.total++;
+  }
+
+  function handleLessonQuizChange(): void {
+    hasQuizStarted = !hasQuizStarted;
+  }
+
+  function resetQuiz(): void {
+    guesses.total = 0;
+    guesses.incorrect = 0;
+    guesses.correct = 0;
+    handleLessonQuizChange()
   }
 </script>
-  
-<style type='text/scss'>
+
+{#if !hasQuizStarted}
+  <!-- content here -->
+  <div>
+    <h1>Lesson {params.lesson}</h1>
+    <h2>{lesson.title}</h2>
+    <table>
+      <thead>
+        <tr>
+          <td>word</td>
+          <td>meaning</td>
+        </tr>
+      </thead>
+      <tbody>
+        {#each lesson.words as word}
+          <tr>
+            <td>{word.word}</td>
+            <td>{word.meaning}</td>
+          </tr>
+        {/each}
+      </tbody>
+    </table>
+  </div>
+  <button on:click={handleLessonQuizChange}>Start Quiz</button>
+{:else}
+  <!-- else content here -->
+  <p>Questions answered: {guesses.total}</p>
+  <p>Questions correct: {guesses.correct}</p>
+  <p>Questions incorrect: {guesses.incorrect}</p>
+  <div class="question">
+    <button on:click={resetQuiz}>&larr; Go back to lesson</button>
+    <Mcq {lesson} on:answer={handleAnswer} on:next={handleNext} />
+  </div>
+  {#if guesses.total > 4}
+    <!-- content here -->
+    <a href="course/{getNextLesson()}">Next lesson</a>
+  {/if}
+{/if}
+
+<style type="text/scss">
   table {
     table-layout: fixed;
     width: 50%;
@@ -52,13 +99,14 @@
 
     thead {
       font-weight: bold;
-      border-bottom: 1px solid black
+      border-bottom: 1px solid black;
     }
 
-    tr, td {
+    tr,
+    td {
       border: 1px solid black;
     }
-    
+
     td {
       padding: 2px 5px;
     }
@@ -66,41 +114,11 @@
 
   .question {
     margin: 3rem 0;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 0;
+    button {
+      
+    }
   }
 </style>
-
-<div>
-  <h1>Lesson {params.lesson}</h1>
-  <h2>{lesson.title}</h2>
-  <table>
-    <thead>
-      <tr>
-        <td>word</td>
-        <td>meaning</td>
-      </tr>
-    </thead>
-    <tbody>
-      {#each lesson.words as word}
-         <tr>
-           <td>{word.word}</td>
-           <td>{word.meaning}</td>
-         </tr>
-      {/each}
-    </tbody>
-  </table>
-</div>
-
-<p>Questions answered: {guesses.total}</p>
-<p>Questions correct: {guesses.correct}</p>
-<p>Questions incorrect: {guesses.incorrect}</p>
-<div class="question">
-  <Mcq lesson={lesson} on:answer={handleAnswer} on:next={handleNext}/>
-</div>
-
-<button on:click={printLesson}>DEBG: Print data</button>
-
-{#if guesses.total > 4}
-   <!-- content here -->
-   <a href="course/{getNextLesson()}">Next lesson</a>
-{/if}
-
