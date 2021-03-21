@@ -12,7 +12,11 @@
   export let lesson: any;
   export let params: any
 
-  
+  let guesses = {
+    total: 0,
+    correct: 0,
+    incorrect: 0
+  };
 
   function printLesson(): void {
     console.log({lesson, params});
@@ -20,6 +24,22 @@
 
   function getNextLesson(): number {
     return parseInt(params.lesson) + 1
+  }
+
+  function handleAnswer(event): void {
+    console.log('bing');
+    const correct = event.detail.correct
+    if (correct) {
+      guesses.correct++
+    } else {
+      guesses.incorrect++
+    }
+    
+    console.log(guesses);
+  }
+
+  function handleNext(): void {
+    guesses.total++
   }
 </script>
   
@@ -42,6 +62,10 @@
     td {
       padding: 2px 5px;
     }
+  }
+
+  .question {
+    margin: 3rem 0;
   }
 </style>
 
@@ -66,9 +90,17 @@
   </table>
 </div>
 
+<p>Questions answered: {guesses.total}</p>
+<p>Questions correct: {guesses.correct}</p>
+<p>Questions incorrect: {guesses.incorrect}</p>
 <div class="question">
-  <Mcq />
+  <Mcq lesson={lesson} on:answer={handleAnswer} on:next={handleNext}/>
 </div>
 
-<button on:click={printLesson}>Print data</button>
-<a href="course/{getNextLesson()}">Next lesson</a>
+<button on:click={printLesson}>DEBG: Print data</button>
+
+{#if guesses.total > 4}
+   <!-- content here -->
+   <a href="course/{getNextLesson()}">Next lesson</a>
+{/if}
+
